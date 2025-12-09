@@ -1,5 +1,5 @@
 """
-Google Calendar MCP Agent (v4 - work in progress)
+Google Calendar MCP Agent (v4)
 
 Professional-grade agent built with the OpenAI Agents SDK.
 Uses Phoenix tracing (per-turn spans), an async MCP bridge, and SQLite session
@@ -14,7 +14,7 @@ Features:
 - Plain-text UTF-8 conversation-history export with per-turn timestamps
 
 Version changes:
-- v4: To be implemented still.
+- v4: Neutral persona, final user turn processing, history folder, stop reasons, console echo.
 - v3: Added UTF-8 history export, per-turn timestamps, and ensured the final user
       message is logged once. Minor tracing span cleanup.
 - v2: Introduced LLM-driven synthetic user simulator, scenario CSV loading, and

@@ -1,5 +1,5 @@
 """
-Google Calendar MCP Agent (v4)
+Google Calendar MCP Agent (v5)
 
 Professional-grade agent built with the OpenAI Agents SDK.
 Uses Phoenix tracing (per-turn spans), an async MCP bridge, and SQLite session
@@ -14,6 +14,8 @@ Features:
 - Plain-text UTF-8 conversation-history export with per-turn timestamps
 
 Version changes:
+- v5: Tighter off-scope handling, non-overclaim rule, improved final JSON format,
+      and refined agent instructions for better reliability.
 - v4: Neutral persona, final user turn processing, history folder, stop reasons, console echo.
 - v3: Added UTF-8 history export, per-turn timestamps, and ensured the final user
       message is logged once. Minor tracing span cleanup.
@@ -22,20 +24,9 @@ Version changes:
 - v1: Baseline REPL-driven agent with MCP calendar tools and tracing.
 
 Change request:
-"Apply the following functional improvements without altering overall architecture:
-1. Ensure the final user message is processed once before stopping.
-   If simulate_user_turn returns continue=false, still run the agent on that final user message, record the assistant reply, then end the loop.
-2. Remove the medical-receptionist persona.
-   Replace the instructions block with a neutral description of a general Google Calendar assistant.
-3. Save history files into a dedicated folder.
-   Write all conversation logs into a "conversation_logs/" directory (creating it if missing). Keep the same plain-text format.
-4. Add an optional "reason" field from the synthetic user LLM.
-   Extend simulate_user_turn so that when continue=false, it may return {"reason": "..."} and include this reason in the saved history file."
-5. When stopping because of max turns, record a stop reason in the saved history.
-6. Echo each user input to the console before showing the agent output.
-7. Include the scenario in saved log filenames for easier lookup.
-8. Print scenario and session id at run start for quick run identification.
-
+1. Keep the assistant strictly on calendar tasks; politely decline anything off-scope (e.g., Wi-Fi, weather, Meet chats) and steer back to calendar help.
+2. Avoid overclaiming: only promise actions the listed tools support; if something isn’t possible (like setting reminders), say so and only propose alternatives the tools can actually do.
+3. Make the synthetic user stay constructive: each turn should add new information instead of echoing the assistant; if the task is done or blocked, end gracefully with a brief reason.
 """
 
 
@@ -215,7 +206,13 @@ calendar_agent = Agent(
     model="gpt-5-nano",
     instructions="""
 You are a helpful Google Calendar assistant for David. Use the tools to review, create,
-and update events clearly and efficiently.
+and update events clearly and efficiently. Stay strictly on calendar tasks.
+
+Scope guard:
+- If the user asks for something non-calendar (e.g., Wi-Fi issues, weather, Meet chat summaries, general chit-chat), politely decline and redirect to calendar help in one short sentence.
+
+Non-overclaim rule:
+- You can only perform actions that are explicitly supported by the provided tool signatures. If the user requests anything that cannot be achieved through these tools, you must say so. Only offer an alternative if it is fully achievable using the existing tools.
 
 You have three tools:
 - list_calendar_events(date_start, date_end?)
@@ -292,10 +289,12 @@ def simulate_user_turn(
     Ask the LLM to produce the next synthetic user message.
     Returns (message, continue_flag, stop_reason). The continue_flag lets us stop early.
     """
-    # Keep the simulator focused on the scenario and short outputs.
+    # Keep the simulator focused, forward-moving, and non-echoing.
     system_prompt = (
         "You simulate the user in a conversation with a calendar agent. "
-        "Stay consistent with the scenario. If the task is done or blocked, set continue to false."
+        "Stay consistent with the scenario. Always add new information to progress the task. "
+        "Do not ask the assistant questions. Do not repeat or paraphrase the assistant. "
+        "If the task is done or blocked, set continue to false and include a short reason."
     )
 
     history_text = format_history(conversation_history)
@@ -307,7 +306,6 @@ def simulate_user_turn(
         f"Conversation so far:\n{history_text}"
     )
 
-    # Some models (e.g., gpt-5-nano) reject non-default temperature; omit it to stay compatible.
     completion = client.chat.completions.create(
         model=SIMULATED_USER_MODEL,
         messages=[
@@ -319,11 +317,16 @@ def simulate_user_turn(
     raw = completion.choices[0].message.content.strip()
     try:
         parsed = json.loads(raw)
-        return (
-            parsed.get("message", "").strip(),
-            bool(parsed.get("continue", True)),
-            parsed.get("reason"),
-        )
+        msg = parsed.get("message", "").strip()
+        cont = bool(parsed.get("continue", True))
+        reason = parsed.get("reason")
+
+        if not msg:
+            msg = reason or "No further actions."
+        elif last_agent_reply and msg.lower() == last_agent_reply.strip().lower():
+            msg = reason or "No further actions."
+
+        return msg, cont, reason
     except Exception:
         # If parsing fails, treat the raw text as the message and continue.
         return raw, True, None

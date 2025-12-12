@@ -1,49 +1,105 @@
-# Google Calendar MCP Agent (OpenAI Agents SDK)
+# Calendar Agent Evaluation Framework
 
-A lightweight AI agent that reads, creates, and updates Google Calendar
-events through an MCP server.\
-Built entirely with the **OpenAI Agents SDK**, using **Phoenix
-tracing**, **SQLite session memory**, and a **true tool-calling loop**
-(`think → act → think → final JSON`).
+Evaluation harness for testing **MCP-based AI agents** using synthetic user scenarios, conversation logs, and Phoenix tracing.
 
-This project demonstrates real applied AI engineering: an autonomous
-agent calling real tools against a live Google Calendar.
+The framework is used to run repeatable, multi-turn conversations against a tool-calling agent and inspect how it behaves under realistic and adversarial conditions.
 
-## What the agent can do
+---
 
-• List events for any date or range\
-• Create meetings from natural language ("book lunch tomorrow at 1pm")\
-• Update existing events\
-• Detect conflicts\
-• Phoenix tracing for every step\
-• Per-run session IDs for isolation
+## Scope
 
-## Architecture
+This repository focuses on **agent evaluation**, not agent features.
 
-    mcp_calendar_agent.py     # The agent
-    calendar_mcp_server.py    # MCP server exposing Calendar tools
-    tracer_config.py          # Phoenix config
-    .gitignore
-    requirements.txt
+It provides:
+- a multi-turn execution loop with termination handling  
+- a scenario-driven synthetic user  
+- structured transcripts and tracing for inspection  
 
-## Running the project
+It does not provide:
+- a user-facing application  
+- a production deployment  
+- prompt-only experiments  
 
-### 1. Virtual environment
+---
 
-    python -m venv venv
-    venv\Scripts\activate
-    pip install -r requirements.txt
+## Evaluation approach
 
-### 2. Google API credentials
+Conversations are driven by CSV-defined scenarios and an LLM-based synthetic user.  
+Each run executes until completion, failure, or a max-turn limit is reached.
 
-Place `credentials.json` in the project root.
+The output of each run includes:
+- a plain-text transcript with timestamps  
+- an explicit stop reason when termination occurs  
+- Phoenix traces showing per-turn reasoning and tool spans  
 
-### 3. Run the agent
+These artefacts are used for inspection and debugging rather than scoring.
 
-    python mcp_calendar_agent.py
+---
 
-## MCP Server
+## Observed failure cases
 
-Full server documentation moved to:
+The following behaviours have been observed during evaluation runs:
 
-    Documentation/mcp_server_README.md
+- **Unsupported capability claims**  
+  The agent suggested actions (e.g. reminders) that were not available via its tools.
+
+- **Off-scope persistence**  
+  When prompted with unrelated topics (weather, Wi-Fi), the agent continued the conversation instead of refusing and stopping.
+
+- **Non-converging dialogues**  
+  Vague scenarios caused repeated back-and-forth until the max-turn limit was hit.
+
+- **Final-turn handling bug (fixed)**  
+  Earlier versions terminated before processing the final user message, dropping the last agent response.
+
+- **Unprompted tool escalation**  
+  Read-only requests occasionally led to the agent proposing create/update actions without explicit user intent.
+
+These issues were identified by inspecting transcripts and Phoenix traces across repeated runs.
+
+---
+
+## High-level structure
+
+- **Agent**: Google Calendar MCP agent (OpenAI Agents SDK)  
+- **Controller**: multi-turn loop with stop conditions  
+- **Synthetic user**: scenario-aware LLM simulator  
+- **Tracing**: Phoenix / OpenTelemetry  
+- **Storage**: SQLite session memory and filesystem logs  
+
+The agent implementation is intentionally secondary to the evaluation logic.
+
+---
+
+## Relationship to the Google Calendar MCP Agent
+
+This framework uses the **Google Calendar MCP Agent** as its test subject.
+
+The agent repository contains:
+- MCP server integration and Google Calendar tooling  
+- full agent instructions and tool definitions  
+- setup and usage documentation  
+
+This repository assumes that background and focuses only on evaluation behaviour.
+
+[📁 GitHub repo](https://github.com/david-revell/google-calendar-mcp)
+
+---
+
+## How to run
+
+1. Clone this repository and the Google Calendar MCP Agent repository.
+2. Set the required environment variables (OpenAI key, Phoenix configuration).
+3. Define evaluation scenarios in `scenarios.csv`.
+4. Run the controller script to execute a scenario-driven evaluation loop.
+5. Inspect:
+   - conversation logs in `conversation_logs/`
+   - traces in the Phoenix UI.
+
+No UI is provided; evaluation is performed via logs and traces.
+
+---
+
+## Status
+
+Exploratory evaluation framework used for iterative testing and debugging of agent behaviour.

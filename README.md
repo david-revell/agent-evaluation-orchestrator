@@ -88,10 +88,7 @@ This repository assumes that background and focuses only on evaluation behaviour
 
 ## How to run
 
-1. Clone this repository:
-   ```
-   git clone <this-repo-url>
-   ```
+1. Clone this repository
 
 2. Set the required environment variables:
    - OpenAI API key  

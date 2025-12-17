@@ -1,32 +1,14 @@
 """
-Google Calendar MCP Agent (v5)
-
-Professional-grade agent built with the OpenAI Agents SDK.
-Uses Phoenix tracing (per-turn spans), an async MCP bridge, and SQLite session
-memory to manage real Google Calendar events via list/create/update tools.
-
-Features:
-- True think -> act (tool) -> think loop with final JSON output
-- Phoenix tracing with clearly named tool spans
-- Per-run session IDs to avoid conversation bleed
-- Natural-language date handling ("tomorrow 3pm", "next Monday", ISO8601")
-- LLM-driven synthetic user simulator with scenario CSV loader & max-turn cap
-- Plain-text UTF-8 conversation-history export with per-turn timestamps
+Script: mcp_calendar_agent.py
+Version: v1
 
 Version changes:
-- v5: Tighter off-scope handling, non-overclaim rule, improved final JSON format,
-      and refined agent instructions for better reliability.
-- v4: Neutral persona, final user turn processing, history folder, stop reasons, console echo.
-- v3: Added UTF-8 history export, per-turn timestamps, and ensured the final user
-      message is logged once. Minor tracing span cleanup.
-- v2: Introduced LLM-driven synthetic user simulator, scenario CSV loading, and
-      max-turn limit (replacing manual stdin loop).
-- v1: Baseline REPL-driven agent with MCP calendar tools and tracing.
+- v1: Added a hard switch to allow human input via blocking stdin instead of the synthetic user LLM.
 
 Change request:
-1. Keep the assistant strictly on calendar tasks; politely decline anything off-scope (e.g., Wi-Fi, weather, Meet chats) and steer back to calendar help.
-2. Avoid overclaiming: only promise actions the listed tools support; if something isn’t possible (like setting reminders), say so and only propose alternatives the tools can actually do.
-3. Make the synthetic user stay constructive: each turn should add new information instead of echoing the assistant; if the task is done or blocked, end gracefully with a brief reason.
+- Provide a single switch so the program can use blocking input() in the terminal when set to human mode.
+- In human mode, fetch messages via input("You: ") each turn; otherwise keep the existing synthetic behavior.
+- No abstractions or other input methods.
 """
 
 
@@ -259,6 +241,8 @@ SCENARIOS_CSV = "scenarios.csv"
 DEFAULT_MAX_TURNS = 10
 # Model used for the synthetic user simulator; overridable via SIMULATED_USER_MODEL env var.
 SIMULATED_USER_MODEL = os.getenv("SIMULATED_USER_MODEL", "gpt-5-nano")
+# Simple mode switch: set HUMAN_INPUT=1 to drive turns via blocking stdin input().
+USE_HUMAN_INPUT = os.getenv("HUMAN_INPUT", "0") == "1"
 
 
 def load_scenarios(csv_path: str) -> List[Dict[str, str]]:
@@ -380,16 +364,26 @@ def save_history(scenario: str, conversation_history: List[Dict[str, str]], stop
 # @tracer.agent
 @tracer.agent(name="mcp_calender_agent")
 def main():
-    print("\n=== Google Calendar MCP Agent (LLM-simulated user) ===")
+    print("\n=== Google Calendar MCP Agent ===")
+    mode_label = "Human input (stdin)" if USE_HUMAN_INPUT else "LLM-simulated user"
+    print(f"Mode: {mode_label}")
 
-    scenarios = load_scenarios(SCENARIOS_CSV)
-    scenario_row = choose_scenario(scenarios)
-    if not scenario_row:
-        print(f"No scenarios found in {SCENARIOS_CSV}. Add rows with scenario and initial_user_message.")
-        return
+    if USE_HUMAN_INPUT:
+        scenario = "human_input"
+        print("Type your message each turn. Enter empty input or /quit to stop.")
+        user_input = input("You: ")
+        if not user_input.strip():
+            print("No input provided; exiting.")
+            return
+    else:
+        scenarios = load_scenarios(SCENARIOS_CSV)
+        scenario_row = choose_scenario(scenarios)
+        if not scenario_row:
+            print(f"No scenarios found in {SCENARIOS_CSV}. Add rows with scenario and initial_user_message.")
+            return
 
-    scenario = scenario_row["scenario"]
-    user_input = scenario_row["initial_user_message"]
+        scenario = scenario_row["scenario"]
+        user_input = scenario_row["initial_user_message"]
     max_turns = int(os.getenv("MAX_TURNS", DEFAULT_MAX_TURNS))
 
     session_id = f"calendar_repl_{datetime.now().strftime('%Y%m%dT%H%M%S')}"
@@ -464,16 +458,22 @@ def main():
                 print(f"Reached max turns ({max_turns}); stopping.")
                 break
 
-            # Ask the LLM to produce the next synthetic user turn.
-            user_input, continue_flag, reason = simulate_user_turn(
-                scenario=scenario,
-                last_agent_reply=agent_reply,
-                conversation_history=conversation_history,
-            )
-            next_user_input = user_input
-            if not continue_flag:
-                final_turn = True
-                stop_reason = reason
+            if USE_HUMAN_INPUT:
+                next_user_input = input("\nYou: ")
+                if not next_user_input.strip() or next_user_input.strip().lower() in {"/quit", "quit", "exit"}:
+                    stop_reason = stop_reason or "User ended session."
+                    break
+            else:
+                # Ask the LLM to produce the next synthetic user turn.
+                user_input, continue_flag, reason = simulate_user_turn(
+                    scenario=scenario,
+                    last_agent_reply=agent_reply,
+                    conversation_history=conversation_history,
+                )
+                next_user_input = user_input
+                if not continue_flag:
+                    final_turn = True
+                    stop_reason = reason
 
     finally:
         close_fn = getattr(session, "close", None)

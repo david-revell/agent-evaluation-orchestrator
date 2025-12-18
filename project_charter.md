@@ -1,7 +1,7 @@
 # Project Charter
 **Agent Evaluation Orchestrator**  
 *project_charter.md*  
-*version: v2*
+*version: v3*
 
 ---
 
@@ -39,14 +39,14 @@
 
 ## 3. Scope
 
-3.1 Version 1 of this project provides mechanisms to run conversations against an AI agent.
+3.1 The current scope of this project provides mechanisms to run conversations against an AI agent.
 
 3.1.1 Conversations may be driven by a synthetic user  
 3.1.2 Conversations may be driven by a human via terminal input  
 
-3.2 Version 1 captures each completed conversation as a plain-text log.
+3.2 The current scope captures each completed conversation as a plain-text log.
 
-3.3 Version 1 provides a standalone evaluator that:
+3.3 THe current scope provides a standalone evaluator that:
 
 3.3.1 accepts one completed conversation log as input  
 3.3.2 uses an LLM to assess agent behaviour against defined criteria  
@@ -67,6 +67,7 @@
 3.7.1 Example: if the user asks “What day is it today?” and the assistant redirects to calendar-only help, the evaluator may incorrectly mark this as a failure.  
 3.7.2 Rationale: redirecting to in-scope calendar tasks can be correct behaviour, “reasoning” in logs may be internal/non-user-facing, and a conversation ending early can be caused by user termination rather than assistant failure.  
 3.7.3 This limitation is documented so future improvements can reduce false negatives without changing the system boundaries (post-hoc, log-only evaluation).  
+3.7.4 Improving evaluator correctness or tuning its judgement logic is explicitly out of scope for the current scope; incorrect or debatable evaluations are expected and documented rather than fixed.
 
 ## 4. Ambition, Stretch Goals, and Open Questions
 
@@ -88,3 +89,14 @@
 4.3.3 how strict or formal scoring should become, if at all  
 
 4.4 Items in Section 4 are documented to make intent explicit and visible, not to commit to implementation within v1.
+
+## 5. Next steps
+
+5.1 Add a simple cross-run summary over many conversation evaluations.
+
+5.1.1 The summary should give an overview across runs (for example: counts of pass/warn/fail and the most common “bad” findings).  
+5.1.2 This work is intended to improve repeatability, comparability, and inspection across multiple runs, without changing the evaluator’s role as a separate layer.  
+
+5.2 After the summary exists, introduce a second, very different agent (for example a RAG-based agent) to stress-test generalisation.
+
+5.2.1 This is not scope creep into “improving the agent under test”; it is expanding the variety of agents to validate that the evaluation layer stays generic.  

@@ -1,14 +1,14 @@
 """
 Script: mcp_calendar_agent.py
-Version: v1
+Version: v2
 
 Version changes:
-- v1: Added a hard switch to allow human input via blocking stdin instead of the synthetic user LLM.
+- v2: Added human-driven mode via blocking terminal input (`HUMAN_USER=1`, with `HUMAN_INPUT=1` as a legacy alias).
+- v2: Logs now include a "Run metadata" header (mode, scenario, max turns, stop reason, session id) for repeatability.
+- v2: Log filenames are neutral (timestamp-based) and do not include scenario names to reduce information leakage and evaluator bias.
 
-Change request:
-- Provide a single switch so the program can use blocking input() in the terminal when set to human mode.
-- In human mode, fetch messages via input("You: ") each turn; otherwise keep the existing synthetic behavior.
-- No abstractions or other input methods.
+Notes:
+- The evaluator is a separate layer (`evaluate_log.py`) and should assess conversation content only, not run settings/metadata.
 """
 
 
@@ -241,8 +241,10 @@ SCENARIOS_CSV = "scenarios.csv"
 DEFAULT_MAX_TURNS = 10
 # Model used for the synthetic user simulator; overridable via SIMULATED_USER_MODEL env var.
 SIMULATED_USER_MODEL = os.getenv("SIMULATED_USER_MODEL", "gpt-5-nano")
-# Simple mode switch: set HUMAN_INPUT=1 to drive turns via blocking stdin input().
-USE_HUMAN_INPUT = os.getenv("HUMAN_INPUT", "0") == "1"
+# Simple mode switch: set HUMAN_USER=1 to drive turns via blocking stdin input().
+# (HUMAN_INPUT is kept as a backwards-compatible alias.)
+_human_flag = os.getenv("HUMAN_USER") or os.getenv("HUMAN_INPUT") or "0"
+USE_HUMAN_INPUT = _human_flag == "1"
 
 
 def load_scenarios(csv_path: str) -> List[Dict[str, str]]:
@@ -344,19 +346,29 @@ def choose_scenario(scenarios: List[Dict[str, str]]) -> Optional[Dict[str, str]]
     return scenarios[0]
 
 
-def save_history(scenario: str, conversation_history: List[Dict[str, str]], stop_reason: Optional[str] = None):
-    """Save the conversation history to a file."""
+def save_history(
+    conversation_history: List[Dict[str, str]],
+    run_metadata: Dict[str, str],
+):
+    """
+    Save a completed conversation to disk.
+
+    Important: we keep run metadata (scenario, mode, max turns, etc.) for repeatability and inspection,
+    but we avoid leaking that metadata via the filename. The evaluator should only assess the
+    conversation content, not scenario labels or run settings.
+    """
     os.makedirs("conversation_logs", exist_ok=True)
-    history_string = f"Scenario: {scenario}\n"
-    if stop_reason:
-        history_string += f"Stop reason: {stop_reason}\n"
-    history_string += "History:\n\n"
+    history_string = "Run metadata:\n"
+    for key, value in run_metadata.items():
+        history_string += f"- {key}: {value}\n"
+    history_string += "\nConversation:\n\n"
     for turn in conversation_history:
         history_string += f" - {turn['role']} [{turn['timestamp']}]:\n {turn['content']}\n"
 
     # Write as UTF-8 so smart quotes/emoji don't get mangled in transcripts.
-    safe_scenario = "".join(c if c.isalnum() or c in "-_" else "_" for c in scenario)  # keep filenames shell-safe
-    filename = f"{safe_scenario}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+    # Use a neutral filename (no scenario name) to reduce information leakage into evaluations.
+    # Timestamp-only keeps it simple; microseconds reduce collision risk in back-to-back runs.
+    filename = f"run_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.txt"
     path = os.path.join("conversation_logs", filename)
     with open(path, "w", encoding="utf-8") as f:
         f.write(history_string)
@@ -477,7 +489,16 @@ def main():
 
     finally:
         close_fn = getattr(session, "close", None)
-        save_history(scenario, conversation_history, stop_reason=stop_reason)
+        # Record run settings for repeatability/inspection.
+        # The evaluator must not enforce these settings; it should evaluate conversation content only.
+        run_metadata = {
+            "session_id": session_id,
+            "mode": "human" if USE_HUMAN_INPUT else "synthetic",
+            "scenario": scenario,
+            "max_turns": str(max_turns),
+            "stop_reason": stop_reason or "",
+        }
+        save_history(conversation_history, run_metadata)
         if callable(close_fn):
             close_fn()
 

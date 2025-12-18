@@ -31,7 +31,8 @@ Thumbs.db
 # Notebook checkpoints / unused agent versions
 .ipynb_checkpoints/
 mcp_calendar_agent_v*.py
-project_charter*.md
+evaluate_log_v*.py
+project_charter_v*.md
 
 # SQLite session databases
 *.db

@@ -1,115 +1,76 @@
-# Calendar Agent Evaluation Framework
+# Agent Evaluation Orchestrator
 
-Evaluation harness for testing **MCP-based AI agents** using synthetic user scenarios, conversation logs, and Phoenix tracing.
+Run conversations against an AI agent, save the resulting logs, and evaluate those logs after the fact.
 
-The framework is used to run repeatable, multi-turn conversations against a tool-calling agent and inspect how it behaves under realistic and adversarial conditions.
+This repo currently uses a Google Calendar MCP agent as a stand-in “agent under test”, but the goal is that the evaluation layer works for other agents later.
 
----
+## What it does
 
-## Scope
+1. Runs a conversation in one of two modes:
+   - synthetic user (driven by `scenarios.csv`)
+   - human user (terminal input)
+2. Saves a plain-text conversation log to `conversation_logs/`
+3. Evaluates one saved log with an LLM and prints a short JSON verdict
 
-This repository focuses on **agent evaluation**, not agent features.
+## Bias / fairness note
 
-It provides:
-- a multi-turn execution loop with termination handling  
-- a scenario-driven synthetic user  
-- structured transcripts and tracing for inspection  
+- Logs can contain run metadata (scenario name, max turns, mode) for repeatability.
+- The evaluator strips metadata and evaluates conversation content only.
+- Log filenames are neutral (they do not include scenario names) to reduce information leakage.
 
-It does not provide:
-- a user-facing application  
-- a production deployment  
-- prompt-only experiments  
+## Key files
 
----
-
-## Evaluation approach
-
-Conversations are driven by CSV-defined scenarios and an LLM-based synthetic user.  
-Each run executes until completion, failure, or a max-turn limit is reached.
-
-The output of each run includes:
-- a plain-text transcript with timestamps  
-- an explicit stop reason when termination occurs  
-- Phoenix traces showing per-turn reasoning and tool spans  
-
-These artefacts are used for inspection and debugging rather than scoring.
-
----
-
-## Observed failure cases
-
-The following behaviours have been observed during evaluation runs:
-
-- **Unsupported capability claims**  
-  The agent suggested actions (e.g. reminders) that were not available via its tools.
-
-- **Off-scope persistence**  
-  When prompted with unrelated topics (weather, Wi-Fi), the agent continued the conversation instead of refusing and stopping.
-
-- **Non-converging dialogues**  
-  Vague scenarios caused repeated back-and-forth until the max-turn limit was hit.
-
-- **Final-turn handling bug (fixed)**  
-  Earlier versions terminated before processing the final user message, dropping the last agent response.
-
-- **Unprompted tool escalation**  
-  Read-only requests occasionally led to the agent proposing create/update actions without explicit user intent.
-
-These issues were identified by inspecting transcripts and Phoenix traces across repeated runs.
-
----
-
-## High-level structure
-
-- **Agent**: Google Calendar MCP agent (OpenAI Agents SDK)  
-- **Controller**: multi-turn loop with stop conditions  
-- **Synthetic user**: scenario-aware LLM simulator  
-- **Tracing**: Phoenix / OpenTelemetry  
-- **Storage**: SQLite session memory and filesystem logs  
-
-The agent implementation is intentionally secondary to the evaluation logic.
-
----
-
-## Relationship to the Google Calendar MCP Agent
-
-This framework uses the **Google Calendar MCP Agent** as its test subject.
-
-The agent repository contains:
-- MCP server integration and Google Calendar tooling  
-- full agent instructions and tool definitions  
-- setup and usage documentation  
-
-This repository assumes that background and focuses only on evaluation behaviour.
-
-[📁 GitHub repo](https://github.com/david-revell/google-calendar-mcp)
-
----
+- `mcp_calendar_agent.py`: runs conversations (synthetic or human), writes logs
+- `scenarios.csv`: synthetic user scenarios
+- `conversation_logs/`: saved transcripts
+- `evaluate_log.py`: evaluates one log file and prints JSON
+- `project_charter.md`: project goals and boundaries
 
 ## How to run
 
-1. Clone this repository
+1. Set your OpenAI API key (and anything else your environment needs).
 
-2. Set the required environment variables:
-   - OpenAI API key  
-   - Phoenix configuration (if tracing is enabled)
-
-3. Define evaluation scenarios in `scenarios.csv`.
-
-4. Run the evaluation loop for a specific scenario.  
-   For example, to run the scenario called `off_scope_wifi`:
+2. Run in human mode (blocking terminal input) — PowerShell:
+   ```powershell
+   $env:HUMAN_USER=1; python mcp_calendar_agent.py
    ```
-   $env:SCENARIO_NAME="off_scope_wifi"; python mcp_calendar_agent.py
+   Stop by entering an empty line or `/quit`.
+
+3. Run in synthetic mode (scenario-driven) — PowerShell:
+   ```powershell
+   $env:HUMAN_USER=0
+   $env:SCENARIO_NAME="off_scope_wifi"
+   python mcp_calendar_agent.py
+   ```
+    Optional: `$env:MAX_TURNS=10`.
+
+4. Evaluate a saved log:
+   ```powershell
+   python evaluate_log.py conversation_logs\run_YYYYMMDD_HHMMSS_ffffff.txt
+   ```
+   Example:
+   ```powershell
+   python evaluate_log.py conversation_logs\run_20251218_125725_516257.txt
+   ```
+   By default, the evaluator uses `gpt-5-nano`. Optional: `$env:EVALUATOR_MODEL="gpt-5-nano"`.
+
+   Output notes:
+   - `findings` are structured objects with an `evaluation` label: `good`, `bad`, or `neutral`.
+
+5. (Optional) Evaluate multiple logs (PowerShell):
+   ```powershell
+   Get-ChildItem conversation_logs\run_*.txt | ForEach-Object { python evaluate_log.py $_.FullName }
    ```
 
-5. Inspect the outputs:
-   - Conversation logs in `conversation_logs/`
-   - Traces in the Phoenix UI
+   Tip: to keep the terminal readable, you can redirect output to a file:
+   ```powershell
+   Get-ChildItem conversation_logs\run_*.txt | ForEach-Object { python evaluate_log.py $_.FullName } | Out-File eval_results.txt
+   ```
 
-No UI is provided; evaluation is performed via logs and traces.
-
----
+Notes:
+- `HUMAN_INPUT=1` is supported as a legacy alias for `HUMAN_USER=1`.
+- The evaluator remains a separate layer: it reads logs and produces judgements; it does not enforce run settings.
 
 ## Status
 
-Exploratory evaluation framework used for iterative testing and debugging of agent behaviour.
+Early-stage. The focus is on making runs repeatable, comparable, and inspectable via logs.

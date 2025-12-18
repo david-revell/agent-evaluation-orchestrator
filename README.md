@@ -44,7 +44,8 @@ This repo currently uses a Google Calendar MCP agent as a stand-in “agent unde
    ```
     Optional: `$env:MAX_TURNS=10`.
 
-4. Evaluate a saved log:
+4. Evaluate a saved log:  
+   **Note:** Evaluation output is not guaranteed to be correct. The evaluator can produce false negatives or misinterpret correct agent behaviour. This is a known and documented limitation by design 
    ```powershell
    python evaluate_log.py conversation_logs\run_YYYYMMDD_HHMMSS_ffffff.txt
    ```

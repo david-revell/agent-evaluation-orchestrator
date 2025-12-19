@@ -99,7 +99,9 @@
 
 ## 5. Next steps
 
-5.1 Introduce a second, very different agent (for example a RAG-based agent) to stress-test generalisation.
+5.1 Introduce a second, very different agent (for example a RAG-based agent) to stress-test generalisation. *This step expands agent variety only; it is not scope creep into improving any agent.*
 
-5.1.1 This is not scope creep into improving the agent under test; it is expanding the variety of agents to validate that the evaluation layer stays generic.  
+5.1.1 Implement a second, qualitatively different agent (RAG-based, document-grounded, non-tool-using).  
+5.1.2 Wire the RAG agent into the orchestrator so it can be selected like any other agent.  
+5.1.3 Run a small evaluation run (even 3–5 scenarios) and record results to show the evaluation layer remains generic.
 

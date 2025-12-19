@@ -21,6 +21,8 @@ token.json
 results/
 archive/
 conversation_logs/
+evaluation_logs/
+snapshot_cross_run_evaluation_pre_fixes.md
 
 # Editor / OS files
 .cursor/

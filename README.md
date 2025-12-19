@@ -10,7 +10,7 @@ This repo currently uses a Google Calendar MCP agent as a stand-in “agent unde
    - synthetic user (driven by `scenarios.csv`)
    - human user (terminal input)
 2. Saves a plain-text conversation log to `conversation_logs/`
-3. Evaluates one saved log with an LLM and prints a short JSON verdict
+3. Evaluates one or more saved logs with an LLM in a single batch, producing per-log verdicts plus a batch summary, and writes the JSON to `evaluation_logs/`
 
 ## Bias / fairness note
 
@@ -23,7 +23,8 @@ This repo currently uses a Google Calendar MCP agent as a stand-in “agent unde
 - `mcp_calendar_agent.py`: runs conversations (synthetic or human), writes logs
 - `scenarios.csv`: synthetic user scenarios
 - `conversation_logs/`: saved transcripts
-- `evaluate_log.py`: evaluates one log file and prints JSON
+- `evaluation_logs/`: saved evaluation outputs (per batch)
+- `evaluate_log.py`: evaluates one or more log files in a single batch and writes JSON to `evaluation_logs/`
 - `project_charter.md`: project goals and boundaries
 
 ## How to run
@@ -44,29 +45,24 @@ This repo currently uses a Google Calendar MCP agent as a stand-in “agent unde
    ```
     Optional: `$env:MAX_TURNS=10`.
 
-4. Evaluate a saved log:  
-   **Note:** Evaluation output is not guaranteed to be correct. The evaluator can produce false negatives or misinterpret correct agent behaviour. This is a known and documented limitation by design 
+4. Evaluate one or more saved logs (batch):  
+   **Note:** Evaluation output is not guaranteed to be correct. The evaluator can produce false negatives or misinterpret correct agent behaviour. This is a known and documented limitation by design.  
    ```powershell
-   python evaluate_log.py conversation_logs\run_YYYYMMDD_HHMMSS_ffffff.txt
+   python evaluate_log.py conversation_logs\run_YYYYMMDD_HHMMSS_ffffff.txt [more logs...]
    ```
-   Example:
+   Example (single log):
    ```powershell
    python evaluate_log.py conversation_logs\run_20251218_125725_516257.txt
    ```
+   Example (all logs in a folder, PowerShell):
+   ```powershell
+   Get-ChildItem conversation_logs\run_*.txt | ForEach-Object { $_.FullName } | % { python evaluate_log.py $_ }
+   ```
    By default, the evaluator uses `gpt-5-nano`. Optional: `$env:EVALUATOR_MODEL="gpt-5-nano"`.
 
-   Output notes:
-   - `findings` are structured objects with an `evaluation` label: `good`, `bad`, or `neutral`.
-
-5. (Optional) Evaluate multiple logs (PowerShell):
-   ```powershell
-   Get-ChildItem conversation_logs\run_*.txt | ForEach-Object { python evaluate_log.py $_.FullName }
-   ```
-
-   Tip: to keep the terminal readable, you can redirect output to a file:
-   ```powershell
-   Get-ChildItem conversation_logs\run_*.txt | ForEach-Object { python evaluate_log.py $_.FullName } | Out-File eval_results.txt
-   ```
+   Output:
+   - A JSON file is written to `evaluation_logs/` (e.g., `evaluation_logs/batch_evaluation_YYYYMMDD_HHMMSS.json`).
+   - The JSON includes a `summary` (counts and common bad findings) and `per_log` entries (verdicts and findings for each log).
 
 Notes:
 - `HUMAN_INPUT=1` is supported as a legacy alias for `HUMAN_USER=1`.

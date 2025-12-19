@@ -1,11 +1,9 @@
 """
 Script: mcp_calendar_agent.py
-Version: v2
+Version: 
 
 Version changes:
-- v2: Added human-driven mode via blocking terminal input (`HUMAN_USER=1`, with `HUMAN_INPUT=1` as a legacy alias).
-- v2: Logs now include a "Run metadata" header (mode, scenario, max turns, stop reason, session id) for repeatability.
-- v2: Log filenames are neutral (timestamp-based) and do not include scenario names to reduce information leakage and evaluator bias.
+-
 
 Notes:
 - The evaluator is a separate layer (`evaluate_log.py`) and should assess conversation content only, not run settings/metadata.

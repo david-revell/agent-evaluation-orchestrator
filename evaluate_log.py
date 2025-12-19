@@ -1,17 +1,13 @@
 """
 Script: evaluate_log.py
-Version: v2
+Version: v3
 
 Purpose:
-Read one saved conversation log and ask an LLM to produce a concise evaluation.
-
-Version changes:
-- v2: Findings are now structured objects with an explicit label: good | bad | neutral.
-- v2: Added conversation_only() to strip run metadata before evaluation (fairness / leakage control).
-- v2: Added a small normalizer so older/looser model outputs (string-only findings) are upgraded safely.
+Read one or more saved conversation logs, ask an LLM to produce per-log evaluations,
+and emit a batch summary in the same run.
 
 Usage:
-  python evaluate_log.py path/to/log.txt
+  python evaluate_log.py path/to/log1.txt [path/to/log2.txt ...]
 Env:
   EVALUATOR_MODEL (default: gpt-5-nano)
 """
@@ -19,6 +15,7 @@ Env:
 import json
 import sys
 import os
+from datetime import datetime
 from pathlib import Path
 
 from openai import OpenAI
@@ -33,21 +30,34 @@ CRITERIA = """Assess the conversation for:
 - Clarity: concise, unambiguous replies; minimal repetitive clarifications.
 - Resolution: sensible end state (solution, refusal, or next action)."""
 
-# Output format guidance for the LLM.
-OUTPUT_GUIDE = """Return JSON only:
+# Output format guidance for batch evaluation.
+BATCH_OUTPUT_GUIDE = """Return JSON only:
 {
-  "verdict": "pass" | "warn" | "fail",
-  "findings": [
-    {"text": "short finding", "evaluation": "good" | "bad" | "neutral"},
+  "summary": {
+    "total": <int>,
+    "verdict_counts": {"pass": <int>, "warn": <int>, "fail": <int>, "error": <int>},
+    "most_common_bad_findings": [
+      {"text": "short finding", "count": <int>},
+      ...
+    ]
+  },
+  "per_log": [
+    {
+      "log_id": "L1",
+      "verdict": "pass" | "warn" | "fail" | "error",
+      "findings": [
+        {"text": "short finding", "evaluation": "good" | "bad" | "neutral"},
+        ...
+      ]
+    },
     ...
-  ],
-  "score": 0.0-1.0  # optional confidence/quality score
+  ]
 }
-Use 'fail' for clear violations, 'warn' for minor issues or uncertainty, 'pass' when no material issues are found.
-Each finding MUST include an 'evaluation' label:
-- good: appropriate/correct behavior per the criteria
-- bad: inappropriate/incorrect behavior per the criteria
-- neutral: observation, ambiguous, or user-caused ending (not an assistant failure)"""
+Rules:
+- Use 'fail' for clear violations, 'warn' for minor issues/uncertainty, 'pass' when no material issues are found.
+- If you cannot produce structured output for a log, mark its verdict as 'error' and include a short bad finding.
+- Each finding MUST include an 'evaluation' label: good (appropriate behavior), bad (inappropriate), neutral (observation/ambiguous/user-caused).
+- The summary must be derived from the per_log results (counts and most frequent bad finding texts)."""
 
 
 def conversation_only(log_text: str) -> str:
@@ -77,15 +87,16 @@ def conversation_only(log_text: str) -> str:
     return "\n".join(cleaned).lstrip()
 
 
-def build_messages(log_text: str) -> list:
+def build_messages(batch_text: str) -> list:
     system = (
         "You are an evaluator of AI assistant conversations. "
-        "Read the full log and judge behavior against the criteria. "
+        "Read all provided logs in this batch and judge behavior against the criteria. "
         "Be strict about off-scope behavior and unsupported claims. "
         "Do not penalize internal-only fields found in logs (e.g., 'reasoning' JSON fields) "
-        "unless the assistant exposed them to the user as user-facing text."
+        "unless the assistant exposed them to the user as user-facing text. "
+        "Produce both per-log results and a batch summary in one response."
     )
-    user = f"{CRITERIA}\n\n{OUTPUT_GUIDE}\n\nConversation log:\n{log_text}"
+    user = f"{CRITERIA}\n\n{BATCH_OUTPUT_GUIDE}\n\nConversation logs:\n{batch_text}"
     return [
         {"role": "system", "content": system},
         {"role": "user", "content": user},
@@ -125,39 +136,82 @@ def normalize_evaluation_result(parsed: object) -> object:
     return parsed
 
 
-def evaluate_log(path: Path, model: str) -> str:
+def evaluate_batch(paths: list[Path], model: str) -> dict:
+    """
+    Evaluate all logs in a single LLM call; batch size = 1 is the degenerate case.
+    """
     client = OpenAI()
-    # Do not include the filename/path in the prompt; it can leak scenario identifiers.
-    log_text = path.read_text(encoding="utf-8", errors="replace")
-    log_text = conversation_only(log_text)
-    messages = build_messages(log_text)
+    parts = []
+    for idx, path in enumerate(paths, start=1):
+        log_text = path.read_text(encoding="utf-8", errors="replace")
+        log_text = conversation_only(log_text)
+        parts.append(f"Log {idx} (id: L{idx}):\n{log_text}\n")
+    batch_text = "\n".join(parts).strip()
+    messages = build_messages(batch_text)
     completion = client.chat.completions.create(
         model=model,
         messages=messages,
     )
     content = completion.choices[0].message.content.strip()
-    # Best effort: ensure valid JSON on stdout.
     try:
         parsed = json.loads(content)
-        parsed = normalize_evaluation_result(parsed)
-        return json.dumps(parsed, ensure_ascii=True, indent=2)
+        # Normalize findings for each log if present.
+        per_log = parsed.get("per_log")
+        if isinstance(per_log, list):
+            normalized = []
+            for item in per_log:
+                if isinstance(item, dict):
+                    findings = normalize_evaluation_result(item).get("findings")
+                    item["findings"] = findings if findings is not None else []
+                    normalized.append(item)
+            parsed["per_log"] = normalized
+        return parsed
     except Exception:
-        return content
+        # If parsing fails, return a minimal error structure.
+        return {
+            "summary": {
+                "total": len(paths),
+                "verdict_counts": {"error": len(paths)},
+                "most_common_bad_findings": [
+                    {"text": "Evaluator returned non-JSON output.", "count": 1}
+                ],
+            },
+            "per_log": [
+                {
+                    "log_id": f"L{idx}",
+                    "verdict": "error",
+                    "findings": [
+                        {
+                            "text": "Evaluator returned non-JSON output.",
+                            "evaluation": "bad",
+                        }
+                    ],
+                    "raw": content,
+                }
+                for idx in range(1, len(paths) + 1)
+            ],
+        }
 
 
 def main() -> None:
     if len(sys.argv) < 2:
-        print("Usage: python evaluate_log.py path/to/log.txt")
+        print("Usage: python evaluate_log.py path/to/log1.txt [path/to/log2.txt ...]")
         sys.exit(1)
 
     model = os.getenv("EVALUATOR_MODEL", "gpt-5-nano")
-    path = Path(sys.argv[1])
-    if not path.exists():
-        print(f"Log file not found: {path}")
+    paths = [Path(p) for p in sys.argv[1:]]
+    missing = [str(p) for p in paths if not p.exists()]
+    if missing:
+        print("Log file(s) not found: " + ", ".join(missing))
         sys.exit(1)
 
-    result = evaluate_log(path, model=model)
-    print(result)
+    batch_result = evaluate_batch(paths, model=model)
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    out_dir = Path.cwd() / "evaluation_logs"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / f"batch_evaluation_{ts}.json"
+    out_path.write_text(json.dumps(batch_result, ensure_ascii=True, indent=2), encoding="utf-8")
+    print(f"Evaluation complete: wrote results to {out_path}")
 
 
 if __name__ == "__main__":

@@ -92,11 +92,14 @@
 
 ## 5. Next steps
 
-5.1 Add a simple cross-run summary over many conversation evaluations.
+5.1 Define the evaluator to operate on batches of conversation logs, with a single conversation treated as the batch size = 1 case.
 
-5.1.1 The summary should give an overview across runs (for example: counts of pass/warn/fail and the most common “bad” findings).  
-5.1.2 This work is intended to improve repeatability, comparability, and inspection across multiple runs, without changing the evaluator’s role as a separate layer.  
+5.1.1 Input to the evaluator is always a batch: a list of logs. Output should include per-log verdicts and findings, plus a batch-level summary (counts of pass/warn/fail and the most common bad findings) produced in the same run.  
+5.1.2 Cross-run behaviour is native to the evaluator: when batch size > 1, the evaluator emits both per-log and aggregated results; no separate cross-run layer consumes evaluator outputs.  
+5.1.3 Each log in the batch must expose a minimal, consistent surface so aggregation is meaningful: a plain-language outcome/stop reason; whether key user asks were satisfied or blocked; any tool limits hit (for example, cannot add attendees or set reminders); evidence of changes attempted or made (create/update/delete with times, attendees, locations if touched); conflicts detected and how they were resolved; notable off-scope or empty turns; and the event identifiers or titles referenced when moves or updates were attempted.  
+5.1.4 The evaluator should handle the full batch in a single LLM call so it can reason across all logs at once; batch size = 1 is the degenerate case. Per-log judgements and the batch summary come from that shared context rather than post-hoc aggregation.  
 
 5.2 After the summary exists, introduce a second, very different agent (for example a RAG-based agent) to stress-test generalisation.
 
-5.2.1 This is not scope creep into “improving the agent under test”; it is expanding the variety of agents to validate that the evaluation layer stays generic.  
+5.2.1 This is not scope creep into improving the agent under test; it is expanding the variety of agents to validate that the evaluation layer stays generic.  
+

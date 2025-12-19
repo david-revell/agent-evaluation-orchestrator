@@ -1,7 +1,6 @@
 # Project Charter
 **Agent Evaluation Orchestrator**  
 *project_charter.md*  
-*version: v3*
 
 ---
 
@@ -95,7 +94,7 @@
 4.3.2 whether evaluation outputs should remain ephemeral or be persisted  
 4.3.3 how strict or formal scoring should become, if at all  
 
-4.4 Items in Section 4 are documented to make intent explicit and visible, not to commit to implementation within v1.
+4.4 Items in Section 4 are documented to make intent explicit and visible
 
 ## 5. Next steps
 

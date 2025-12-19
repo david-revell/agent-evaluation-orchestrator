@@ -100,7 +100,7 @@
 
 5.1 Introduce a second, very different agent (for example a RAG-based agent) to stress-test generalisation. *This step expands agent variety only; it is not scope creep into improving any agent.*
 
-5.1.1 Implement a second, qualitatively different agent (RAG-based, document-grounded, non-tool-using).  
+5.1.1 Implement a second, qualitatively different agent (RAG-based, document-grounded, non-tool-using). **This agent already exists and is implemented under** `agents/rag/`.  
 5.1.2 Wire the RAG agent into the orchestrator so it can be selected like any other agent.  
 5.1.3 Run a small evaluation run (even 3–5 scenarios) and record results to show the evaluation layer remains generic.
 

@@ -69,6 +69,13 @@
 3.7.3 This limitation is documented so future improvements can reduce false negatives without changing the system boundaries (post-hoc, log-only evaluation).  
 3.7.4 Improving evaluator correctness or tuning its judgement logic is explicitly out of scope for the current scope; incorrect or debatable evaluations are expected and documented rather than fixed.
 
+3.8 The evaluator operates on batches of conversation logs; a single conversation is just batch size = 1.
+
+3.8.1 Input to the evaluator is always a batch (list of logs). Output includes per-log verdicts and findings plus a batch-level summary (counts of pass/warn/fail and the most common bad findings) produced in the same run.  
+3.8.2 Cross-run behaviour is native to the evaluator: when batch size > 1, it emits both per-log and aggregated results in one call; no separate cross-run layer consumes evaluator outputs.  
+3.8.3 Each log in the batch exposes a minimal, consistent surface so aggregation is meaningful: a plain-language outcome/stop reason; whether key user asks were satisfied or blocked; any tool limits hit (for example, cannot add attendees or set reminders); evidence of changes attempted or made (create/update/delete with times, attendees, locations if touched); conflicts detected and how they were resolved; notable off-scope or empty turns; and the event identifiers or titles referenced when moves or updates were attempted.  
+3.8.4 The evaluator processes the full batch in a single LLM call so it can reason across all logs at once; per-log judgements and the batch summary come from that shared context rather than post-hoc aggregation.  
+
 ## 4. Ambition, Stretch Goals, and Open Questions
 
 4.1 The long-term ambition of this project is to act as a **generic evaluation layer for AI agents**, independent of agent implementation or deployment model.
@@ -92,14 +99,7 @@
 
 ## 5. Next steps
 
-5.1 Define the evaluator to operate on batches of conversation logs, with a single conversation treated as the batch size = 1 case.
+5.1 Introduce a second, very different agent (for example a RAG-based agent) to stress-test generalisation.
 
-5.1.1 Input to the evaluator is always a batch: a list of logs. Output should include per-log verdicts and findings, plus a batch-level summary (counts of pass/warn/fail and the most common bad findings) produced in the same run.  
-5.1.2 Cross-run behaviour is native to the evaluator: when batch size > 1, the evaluator emits both per-log and aggregated results; no separate cross-run layer consumes evaluator outputs.  
-5.1.3 Each log in the batch must expose a minimal, consistent surface so aggregation is meaningful: a plain-language outcome/stop reason; whether key user asks were satisfied or blocked; any tool limits hit (for example, cannot add attendees or set reminders); evidence of changes attempted or made (create/update/delete with times, attendees, locations if touched); conflicts detected and how they were resolved; notable off-scope or empty turns; and the event identifiers or titles referenced when moves or updates were attempted.  
-5.1.4 The evaluator should handle the full batch in a single LLM call so it can reason across all logs at once; batch size = 1 is the degenerate case. Per-log judgements and the batch summary come from that shared context rather than post-hoc aggregation.  
-
-5.2 After the summary exists, introduce a second, very different agent (for example a RAG-based agent) to stress-test generalisation.
-
-5.2.1 This is not scope creep into improving the agent under test; it is expanding the variety of agents to validate that the evaluation layer stays generic.  
+5.1.1 This is not scope creep into improving the agent under test; it is expanding the variety of agents to validate that the evaluation layer stays generic.  
 

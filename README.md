@@ -32,7 +32,7 @@ Agents under test (examples):
 - `evaluation_logs/`: saved evaluation outputs (per batch)
 - `evaluate_log.py`: evaluates one or more log files in a single batch and writes JSON to `evaluation_logs/`
 - `project_charter.md`: project goals and boundaries
-- `docs/external_agent_contract.md`: contract for plugging new agents into the pipeline
+- `documentation/external_agent_contract.md`: contract for plugging new agents into the pipeline
 
 ## How to run
 

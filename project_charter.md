@@ -103,6 +103,14 @@
 
 4.4 Items in Section 4 are documented to make intent explicit and visible
 
+4.5 Candidate agent types for future generality tests include:
+
+4.5.1 Tool-less chat agent (plain text in/out).  
+4.5.2 Retrieval-only agent that returns an answer with citations.  
+4.5.3 Rules-based scripted agent for deterministic behavior.  
+4.5.4 Multi-agent router that selects between two backends.  
+4.5.5 External data API agent (local runner that uses the Lichess API).
+
 ## 5. Next steps
 
-5.1 To be decided.
+5.1 Implement the external data API agent (4.5.5) using the Lichess API via a local runner.

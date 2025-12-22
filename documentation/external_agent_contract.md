@@ -55,8 +55,29 @@ Conversation:
 7.2 The `Conversation:` block must use the `role [timestamp]` format shown above.
 7.3 The evaluator is log-only; it must not require access to tools, agent internals, or external services.
 
-## 8. Non-goals and out-of-scope behaviour
-8.1 This contract does **not** require a specific model, tool usage, or retrieval method.
-8.2 It does **not** define how agents should be evaluated; it only defines how runs are logged.
-8.3 It does **not** require real-time steering, intervention, or interactive UI support.
-8.4 It does **not** require storage of tool calls, traces, or hidden reasoning.
+## 8. Quick checklist (minimum to plug in)
+8.1 Runner can accept a user message and return one assistant reply.
+8.2 Runner writes a UTF-8 log with `Run metadata:` and `Conversation:` blocks.
+8.3 Log filenames are neutral (no scenario names).
+8.4 Evaluator can read the log without any extra context or services.
+
+## 9. Example log snippet (single-turn)
+Run metadata:
+- session_id: example_20251222T120000
+- mode: synthetic
+- scenario: example_scenario
+- max_turns: 1
+- stop_reason: single_turn
+
+Conversation:
+
+ - user [2025-12-22 12:00:00]:
+  What does the document say about nurse licensing in Spain?
+ - assistant [2025-12-22 12:00:01]:
+  The document explains the licensing steps and required credentials for nurses in Spain, including recognition and registration requirements.
+
+## 10. Non-goals and out-of-scope behaviour
+10.1 This contract does **not** require a specific model, tool usage, or retrieval method.
+10.2 It does **not** define how agents should be evaluated; it only defines how runs are logged.
+10.3 It does **not** require real-time steering, intervention, or interactive UI support.
+10.4 It does **not** require storage of tool calls, traces, or hidden reasoning.

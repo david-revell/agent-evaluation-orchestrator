@@ -45,7 +45,7 @@
 
 3.2 The current scope captures each completed conversation as a plain-text log.
 
-3.3 THe current scope provides a standalone evaluator that:
+3.3 The current scope provides a standalone evaluator that:
 
 3.3.1 accepts one completed conversation log as input  
 3.3.2 uses an LLM to assess agent behaviour against defined criteria  
@@ -63,8 +63,8 @@
 
 3.7 Known evaluator limitation: the evaluator can be wrong in specific cases.
 
-3.7.1 Example: if the user asks “What day is it today?” and the assistant redirects to calendar-only help, the evaluator may incorrectly mark this as a failure.  
-3.7.2 Rationale: redirecting to in-scope calendar tasks can be correct behaviour, “reasoning” in logs may be internal/non-user-facing, and a conversation ending early can be caused by user termination rather than assistant failure.  
+3.7.1 Example: if the user asks "What day is it today?" and the assistant redirects to calendar-only help, the evaluator may incorrectly mark this as a failure.
+3.7.2 Rationale: redirecting to in-scope calendar tasks can be correct behaviour, "reasoning" in logs may be internal/non-user-facing, and a conversation ending early can be caused by user termination rather than assistant failure.
 3.7.3 This limitation is documented so future improvements can reduce false negatives without changing the system boundaries (post-hoc, log-only evaluation).  
 3.7.4 Improving evaluator correctness or tuning its judgement logic is explicitly out of scope for the current scope; incorrect or debatable evaluations are expected and documented rather than fixed.
 
@@ -74,6 +74,13 @@
 3.8.2 Cross-run behaviour is native to the evaluator: when batch size > 1, it emits both per-log and aggregated results in one call; no separate cross-run layer consumes evaluator outputs.  
 3.8.3 Each log in the batch exposes a minimal, consistent surface so aggregation is meaningful: a plain-language outcome/stop reason; whether key user asks were satisfied or blocked; any tool limits hit (for example, cannot add attendees or set reminders); evidence of changes attempted or made (create/update/delete with times, attendees, locations if touched); conflicts detected and how they were resolved; notable off-scope or empty turns; and the event identifiers or titles referenced when moves or updates were attempted.  
 3.8.4 The evaluator processes the full batch in a single LLM call so it can reason across all logs at once; per-log judgements and the batch summary come from that shared context rather than post-hoc aggregation.  
+
+3.9 The system includes more than one agent under test to validate generality.
+
+3.9.1 The Google Calendar agent remains a tool-using, multi-turn baseline.  
+3.9.2 A second agent (RAG-based, document-grounded, non-tool-using) is implemented under `agents/rag/`.  
+3.9.3 The RAG agent is run through the same run -> log -> evaluate pipeline via a minimal runner that writes standard conversation logs.  
+3.9.4 Small evaluation batches against the RAG agent are part of the documented pipeline to demonstrate evaluator generality.
 
 ## 4. Ambition, Stretch Goals, and Open Questions
 
@@ -98,9 +105,4 @@
 
 ## 5. Next steps
 
-5.1 Introduce a second, very different agent (for example a RAG-based agent) to stress-test generalisation. *This step expands agent variety only; it is not scope creep into improving any agent.*
-
-5.1.1 Implement a second, qualitatively different agent (RAG-based, document-grounded, non-tool-using). **This agent already exists and is implemented under** `agents/rag/`.  
-5.1.2 Wire the RAG agent into the orchestrator so it can be selected like any other agent.  
-5.1.3 Run a small evaluation run (even 3–5 scenarios) and record results to show the evaluation layer remains generic.
-
+5.1 To be decided.

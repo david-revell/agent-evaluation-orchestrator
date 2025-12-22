@@ -1,8 +1,8 @@
 # Agent Evaluation Orchestrator
 
-Run conversations against an AI agent, save the resulting logs, and evaluate those logs after the fact.
+Run conversations against multiple AI agents, save the resulting logs, and evaluate those logs after the fact.
 
-This repo uses a Google Calendar MCP agent as a stand-in agent under test, and also includes a minimal RAG agent to validate that the evaluation layer works across different agent types.
+This repo focuses on the evaluation pipeline itself, not any single agent. It includes more than one agent under test to demonstrate that the run -> log -> evaluate flow is generic.
 
 ## What it does
 
@@ -11,6 +11,10 @@ This repo uses a Google Calendar MCP agent as a stand-in agent under test, and a
    - human user (terminal input)
 2. Saves a plain-text conversation log to `conversation_logs/`
 3. Evaluates one or more saved logs with an LLM in a single batch, producing per-log verdicts plus a batch summary, and writes the JSON to `evaluation_logs/`
+
+Agents under test (examples):
+- Google Calendar MCP agent (multi-turn, tool-using)
+- Minimal RAG agent (single-turn, document-grounded)
 
 ## Bias / fairness note
 
@@ -28,6 +32,7 @@ This repo uses a Google Calendar MCP agent as a stand-in agent under test, and a
 - `evaluation_logs/`: saved evaluation outputs (per batch)
 - `evaluate_log.py`: evaluates one or more log files in a single batch and writes JSON to `evaluation_logs/`
 - `project_charter.md`: project goals and boundaries
+- `docs/external_agent_contract.md`: contract for plugging new agents into the pipeline
 
 ## How to run
 

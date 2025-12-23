@@ -1,45 +1,5 @@
-# Virtual environments
-venv/
-.venv/
-ENV/
-.env/
-
-# Python bytecode
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Scratch / local experiments
-scratch.py
-
-# Local config / secrets
-.env
-*.env
-credentials.json
-token.json
-
-# Logs and output
-*.log
-results/
-archive/
-conversation_logs/
-evaluation_logs/
-snapshot_cross_run_evaluation_pre_fixes.md
-
-# Editor / OS files
-.cursor/
-.vscode/
-.DS_Store
-Thumbs.db
-
-# Notebook checkpoints / unused agent versions
-.ipynb_checkpoints/
-mcp_calendar_agent_v*.py
-evaluate_log_v*.py
-project_charter_v*.md
-
-# SQLite session databases
-*.db
-*.db-shm
 *.db-wal
+
+# RAG knowledge base (local / non-public documents)
+agents/rag/knowledge/*
+!agents/rag/knowledge/.gitkeep

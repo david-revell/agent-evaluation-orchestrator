@@ -46,3 +46,4 @@ project_charter_v*.md
 
 # RAG knowledge base (local / non-public documents)
 agents/rag/knowledge/*
+!agents/rag/knowledge/.gitkeep

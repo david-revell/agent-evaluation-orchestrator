@@ -18,6 +18,7 @@ from typing import Optional, Tuple, List, Dict  # typing for simulate_user_turn,
 from datetime import datetime
 
 from openai import OpenAI
+from dotenv import load_dotenv
 from agents import Agent, Runner, function_tool
 from agents.memory.sqlite_session import SQLiteSession
 from mcp.client.stdio import stdio_client
@@ -25,6 +26,8 @@ from mcp import ClientSession, StdioServerParameters
 
 from tracer_config import tracer
 from opentelemetry import trace
+
+load_dotenv()
 
 client = OpenAI()
 

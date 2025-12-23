@@ -43,3 +43,6 @@ project_charter_v*.md
 *.db
 *.db-shm
 *.db-wal
+
+# RAG knowledge base (local / non-public documents)
+agents/rag/knowledge/*

@@ -19,7 +19,10 @@ from datetime import datetime
 from pathlib import Path
 
 from openai import OpenAI
+from dotenv import load_dotenv
 
+
+load_dotenv()
 
 # Core criteria applied to any agent.
 CRITERIA = """Assess the conversation for:

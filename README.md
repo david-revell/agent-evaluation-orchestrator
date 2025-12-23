@@ -15,6 +15,7 @@ This repo focuses on the evaluation pipeline itself, not any single agent. It in
 Agents under test (examples):
 - Google Calendar MCP agent (multi-turn, tool-using)
 - Minimal RAG agent (single-turn, document-grounded)
+- Lichess agent (multi-turn, API-backed)
 
 ## Bias / fairness note
 
@@ -37,6 +38,7 @@ Agents under test (examples):
 ## How to run
 
 1. Set your OpenAI API key (and anything else your environment needs).
+   This project loads variables from `.env` (if present).
 
 2. Run in human mode (blocking terminal input) - PowerShell:
    ```powershell
@@ -93,6 +95,24 @@ RAG scenarios live in `agents/rag/rag_scenarios.csv`.
   ```powershell
   python rag_runner.py "Your question here"
   ```
+
+### Lichess agent run (multi-turn)
+
+Lichess scenarios live in `agents/lichess/lichess_scenarios.csv`.
+
+- Human input (blocking terminal input) - PowerShell:
+  ```powershell
+  $env:LICHESS_HUMAN_USER=1; python lichess_runner.py
+  ```
+- Scenario-driven (uses the first row unless LICHESS_SCENARIO_NAME is set):
+  ```powershell
+  $env:LICHESS_SCENARIO_NAME="daily_puzzle"
+  python lichess_runner.py
+  ```
+
+Notes:
+- The Lichess agent is read-only for now (no follow/unfollow, no study edits).
+- Tokens default to `LICHESS_TOKEN` and fall back to other Lichess token env vars; see `agents/lichess/README_lichess.md`.
 
 ## Status
 

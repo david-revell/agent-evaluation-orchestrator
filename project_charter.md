@@ -107,7 +107,7 @@
 
 4.5.1 Tool-less chat agent (plain text in/out).  
 4.5.2 Retrieval-only agent that returns an answer with citations.  
-4.5.3 Rules-based scripted agent for deterministic behavior.  
+4.5.3 Rules-based scripted agent for deterministic behaviour.  
 4.5.4 Multi-agent router that selects between two backends.  
 4.5.5 External data API agent (local runner that uses the Lichess API).
 

@@ -335,6 +335,181 @@ def get_game_stream_preview(game_id: str, max_events: int = 5) -> str:
     return "Stream preview:\n" + "\n".join(lines)
 
 
+@function_tool
+def get_user_public_data(username: str) -> str:
+    resp = requests.get(f"https://lichess.org/api/user/{username}", timeout=20)
+    if resp.status_code != 200:
+        return format_http_error("Fetching user public data", resp.status_code, resp.text, None)
+    data = resp.json()
+    return truncate(json.dumps(data, indent=2))
+
+
+@function_tool
+def get_rating_history(username: str) -> str:
+    resp = requests.get(f"https://lichess.org/api/user/{username}/rating-history", timeout=20)
+    if resp.status_code != 200:
+        return format_http_error("Fetching rating history", resp.status_code, resp.text, None)
+    data = resp.json()
+    return truncate(json.dumps(data, indent=2))
+
+
+@function_tool
+def get_performance_stats(username: str, perf: str) -> str:
+    resp = requests.get(f"https://lichess.org/api/user/{username}/perf/{perf}", timeout=20)
+    if resp.status_code != 200:
+        return format_http_error("Fetching performance stats", resp.status_code, resp.text, None)
+    data = resp.json()
+    return truncate(json.dumps(data, indent=2))
+
+
+@function_tool
+def get_user_activity(username: str) -> str:
+    resp = requests.get(f"https://lichess.org/api/user/{username}/activity", timeout=20)
+    if resp.status_code != 200:
+        return format_http_error("Fetching user activity", resp.status_code, resp.text, None)
+    data = resp.json()
+    return truncate(json.dumps(data, indent=2))
+
+
+@function_tool
+def get_crosstable(user1: str, user2: str) -> str:
+    resp = requests.get(f"https://lichess.org/api/crosstable/{user1}/{user2}", timeout=20)
+    if resp.status_code != 200:
+        return format_http_error("Fetching crosstable", resp.status_code, resp.text, None)
+    data = resp.json()
+    return truncate(json.dumps(data, indent=2))
+
+
+@function_tool
+def get_live_streamers() -> str:
+    resp = requests.get("https://lichess.org/api/streamer/live", timeout=20)
+    if resp.status_code != 200:
+        return format_http_error("Fetching live streamers", resp.status_code, resp.text, None)
+    data = resp.json()
+    return truncate(json.dumps(data, indent=2))
+
+
+@function_tool
+def export_game(
+    game_id: str,
+    clocks: bool = False,
+    evals: bool = False,
+    opening: bool = True,
+    moves: bool = True,
+) -> str:
+    headers, token_name, _ = auth_headers(TOKEN_ENV_ORDER, required=False)
+    params = {
+        "clocks": str(clocks).lower(),
+        "evals": str(evals).lower(),
+        "opening": str(opening).lower(),
+        "moves": str(moves).lower(),
+    }
+    resp = requests.get(
+        f"https://lichess.org/game/export/{game_id}",
+        headers=headers,
+        params=params,
+        timeout=20,
+    )
+    if resp.status_code != 200:
+        return format_http_error("Exporting game", resp.status_code, resp.text, token_name)
+    return truncate(resp.text)
+
+
+@function_tool
+def export_games_by_ids(game_ids: str, max_games: int = 5) -> str:
+    headers, token_name, _ = auth_headers(TOKEN_ENV_ORDER, required=False)
+    headers["Accept"] = "application/x-ndjson"
+    ids = [gid.strip() for gid in game_ids.replace("\n", ",").split(",") if gid.strip()]
+    if not ids:
+        return "No game IDs provided."
+    resp = requests.post(
+        "https://lichess.org/games/export/_ids",
+        headers=headers,
+        params={"pgnInJson": True, "opening": True},
+        data=",".join(ids),
+        timeout=20,
+    )
+    if resp.status_code != 200:
+        return format_http_error("Exporting games", resp.status_code, resp.text, token_name)
+    games = parse_ndjson_lines(resp.iter_lines())
+    if games:
+        return summarize_games(games, limit=min(max_games, len(games)))
+    return truncate(resp.text)
+
+
+@function_tool
+def get_tv_channel_best_games(channel: str) -> str:
+    resp = requests.get(f"https://lichess.org/api/tv/{channel}", stream=True, timeout=20)
+    if resp.status_code != 200:
+        return format_http_error("Fetching TV channel games", resp.status_code, resp.text, None)
+    games = parse_ndjson_lines(resp.iter_lines())
+    if not games:
+        return "No channel games returned."
+    return summarize_games(games, limit=min(5, len(games)))
+
+
+@function_tool
+def opening_explorer_masters(fen: str) -> str:
+    resp = requests.get("https://explorer.lichess.ovh/masters", params={"fen": fen}, timeout=20)
+    if resp.status_code != 200:
+        return format_http_error("Opening explorer (masters)", resp.status_code, resp.text, None)
+    data = resp.json()
+    return truncate(json.dumps(data, indent=2))
+
+
+@function_tool
+def opening_explorer_lichess(fen: str, speeds: Optional[str] = None, ratings: Optional[str] = None) -> str:
+    params = {"fen": fen}
+    if speeds:
+        params["speeds"] = speeds
+    if ratings:
+        params["ratings"] = ratings
+    resp = requests.get("https://explorer.lichess.ovh/lichess", params=params, timeout=20)
+    if resp.status_code != 200:
+        return format_http_error("Opening explorer (lichess)", resp.status_code, resp.text, None)
+    data = resp.json()
+    return truncate(json.dumps(data, indent=2))
+
+
+@function_tool
+def opening_explorer_player(
+    fen: str,
+    player: str,
+    color: str = "white",
+) -> str:
+    params = {"fen": fen, "player": player, "color": color}
+    resp = requests.get("https://explorer.lichess.ovh/player", params=params, timeout=20)
+    if resp.status_code != 200:
+        return format_http_error("Opening explorer (player)", resp.status_code, resp.text, None)
+    data = resp.json()
+    return truncate(json.dumps(data, indent=2))
+
+
+@function_tool
+def tablebase_lookup(fen: str, variant: str = "standard") -> str:
+    resp = requests.get(f"https://tablebase.lichess.ovh/{variant}", params={"fen": fen}, timeout=20)
+    if resp.status_code != 200:
+        return format_http_error("Tablebase lookup", resp.status_code, resp.text, None)
+    data = resp.json()
+    return truncate(json.dumps(data, indent=2))
+
+
+def help_text() -> str:
+    return (
+        "Lichess agent capabilities (read-only):\n"
+        "- Profile/preferences/email (requires auth token)\n"
+        "- Public user data: profile, rating history, perf stats, activity, crosstable\n"
+        "- Live streamers\n"
+        "- Games: most recent, filtered by rating/opening/move prefix\n"
+        "- Export a game by ID or export multiple games by IDs\n"
+        "- TV: channels, current channel game, best ongoing channel games\n"
+        "- Puzzles: daily puzzle, puzzle by id\n"
+        "- Opening explorer (masters/lichess/player) and tablebase lookup\n"
+        "Notes: usernames must be Lichess usernames (not real names). "
+        "For full details see agents/lichess/README_lichess.md."
+    )
+
+
 lichess_agent = Agent(
     name="LichessAgent",
     model=DEFAULT_AGENT_MODEL,
@@ -368,6 +543,19 @@ Final answer format:
         get_puzzle_solution_by_id,
         get_tv_channels,
         get_tv_channel_game,
+        get_tv_channel_best_games,
         get_game_stream_preview,
+        get_user_public_data,
+        get_rating_history,
+        get_performance_stats,
+        get_user_activity,
+        get_crosstable,
+        get_live_streamers,
+        export_game,
+        export_games_by_ids,
+        opening_explorer_masters,
+        opening_explorer_lichess,
+        opening_explorer_player,
+        tablebase_lookup,
     ],
 )

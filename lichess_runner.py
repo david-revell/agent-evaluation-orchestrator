@@ -136,6 +136,7 @@ def run_turn_logic(user_input: str, session: SQLiteSession):
 
 def main() -> None:
     print("\n=== Lichess Agent Runner ===")
+    print("Welcome to the Lichess API chat. Type 'help' for capabilities.")
     mode_label = "Human input (stdin)" if USE_HUMAN_INPUT else "LLM-simulated user"
     print(f"Mode: {mode_label}")
 
@@ -143,6 +144,9 @@ def main() -> None:
         scenario = "human_input"
         print("Type your message each turn. Enter empty input or /quit to stop.")
         user_input = input("You: ")
+        if user_input.strip().lower() in {"help", "?", "/help"}:
+            print(lichess_agent.help_text())
+            user_input = input("You: ")
         if not user_input.strip():
             print("No input provided; exiting.")
             return
@@ -204,6 +208,9 @@ def main() -> None:
 
             if USE_HUMAN_INPUT:
                 next_user_input = input("\nYou: ")
+                if next_user_input.strip().lower() in {"help", "?", "/help"}:
+                    print(lichess_agent.help_text())
+                    next_user_input = input("\nYou: ")
                 if not next_user_input.strip() or next_user_input.strip().lower() in {"/quit", "quit", "exit"}:
                     stop_reason = stop_reason or "User ended session."
                     break

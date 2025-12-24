@@ -79,8 +79,9 @@
 
 3.9.1 The Google Calendar agent remains a tool-using, multi-turn baseline.  
 3.9.2 A second agent (RAG-based, document-grounded, non-tool-using) is implemented under `agents/rag/`.  
-3.9.3 The RAG agent is run through the same run -> log -> evaluate pipeline via a minimal runner that writes standard conversation logs.  
-3.9.4 Small evaluation batches against the RAG agent are part of the documented pipeline to demonstrate evaluator generality.
+3.9.3 A third agent (Lichess API-backed, read-only) is implemented under `agents/lichess/`.  
+3.9.4 The RAG and Lichess agents are run through the same run -> log -> evaluate pipeline via minimal runners that write standard conversation logs.  
+3.9.5 Small evaluation batches against these agents are part of the documented pipeline to demonstrate evaluator generality.
 
 ## 4. Ambition, Stretch Goals, and Open Questions
 
@@ -109,8 +110,8 @@
 4.5.2 Retrieval-only agent that returns an answer with citations.  
 4.5.3 Rules-based scripted agent for deterministic behaviour.  
 4.5.4 Multi-agent router that selects between two backends.  
-4.5.5 External data API agent (local runner that uses the Lichess API).
+4.5.5 Multi-agent router that selects between tool-using and non-tool agents.
 
 ## 5. Next steps
 
-5.1 Implement the external data API agent (4.5.5) using the Lichess API via a local runner.
+5.1 Implement a rules-based scripted agent for deterministic behaviour (4.5.3).

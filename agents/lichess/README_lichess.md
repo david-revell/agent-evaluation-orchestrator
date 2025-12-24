@@ -41,6 +41,26 @@ Optional: `$env:MAX_TURNS=10`.
 Type `help` (or `?`) in the runner to see supported queries and required inputs.
 For full details, see the capabilities list above.
 
+## Example prompts
+
+Use Lichess usernames (not real names) and provide IDs where needed.
+
+- "Show public profile for username peletis."
+- "Get rating history for Hikaru."
+- "Get performance stats for MagnusCarlsen in blitz."
+- "Show crosstable for user1=Hikaru and user2=MagnusCarlsen."
+- "List live streamers."
+- "Show the most recent game for username peletis."
+- "List games for peletis with rating >= 1800 and opening prefix C20."
+- "Export game by id kq8yTfXb."
+- "Export games by ids: kq8yTfXb, gKJ9s2qA."
+- "Which game is on the classical TV channel right now?"
+- "Show best ongoing games for TV channel blitz."
+- "Get today’s daily puzzle and show the solution."
+- "Get puzzle solution for id 9dJaD."
+- "Opening explorer (masters) for FEN: r1bqkbnr/pppppppp/2n5/8/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 2"
+- "Tablebase lookup for FEN: 8/8/8/8/8/3k4/3K4/8 w - - 0 1"
+
 ## Tokens
 
 This agent prefers `LICHESS_TOKEN` and falls back to any of:

@@ -1,0 +1,189 @@
+﻿Id,Group,Topic,HTTP Method
+1,Introduction,Endpoint,
+2,Introduction,Clients,
+3,Introduction,Rate limiting,
+4,Introduction,Streaming with ND-JSON,
+5,Introduction,Authentication,
+6,Account,Get my profile,GET
+7,Account,Get my email address,GET
+8,Account,Get my preferences,GET
+9,Account,Get my kid mode status,GET
+10,Account,Set my kid mode status,POST
+11,Account,Get my timeline,GET
+12,Users,Get real-time users status,GET
+13,Users,Get all top 10,GET
+14,Users,Get one leaderboard,GET
+15,Users,Get user public data,GET
+16,Users,Get rating history of a user,GET
+17,Users,Get performance statistics of a user,GET
+18,Users,Get user activity,GET
+19,Users,Get users by ID,POST
+20,Users,Get live streamers,GET
+21,Users,Get crosstable,GET
+22,Users,Autocomplete usernames,GET
+23,Users,Add a note for a user,POST
+24,Users,Get notes for a user,GET
+25,Relations,Get users followed by the logged in user,GET
+26,Relations,Follow a player,POST
+27,Relations,Unfollow a player,POST
+28,Relations,Block a player,POST
+29,Relations,Unblock a player,POST
+30,Games,Export one game,GET
+31,Games,Export ongoing game of a user,GET
+32,Games,Export games of a user,GET
+33,Games,Export games by IDs,POST
+34,Games,Stream games of users,POST
+35,Games,Stream games by IDs,POST
+36,Games,Add game IDs to stream,POST
+37,Games,Get my ongoing games,GET
+38,Games,Stream moves of a game,GET
+39,Games,Import one game,POST
+40,Games,Export your imported games,GET
+41,Games,Export your bookmarked games,GET
+42,TV,Get current TV games,GET
+43,TV,Stream current TV game,GET
+44,TV,Stream current TV game of a TV channel,GET
+45,TV,Get best ongoing games of a TV channel,GET
+46,Puzzles,Get the daily puzzle,GET
+47,Puzzles,Get a puzzle by its ID,GET
+48,Puzzles,Get a new puzzle,GET
+49,Puzzles,Get multiple puzzles at once,GET
+50,Puzzles,Solve multiple puzzles at once,POST
+51,Puzzles,Get your puzzle activity,GET
+52,Puzzles,Get puzzles to replay,GET
+53,Puzzles,Get your puzzle dashboard,GET
+54,Puzzles,Get the storm dashboard of a player,GET
+55,Puzzles,Create and join a puzzle race,POST
+56,Puzzles,Get puzzle race results,GET
+57,Teams,Get team swiss tournaments,GET
+58,Teams,Get a single team,GET
+59,Teams,Get popular teams,GET
+60,Teams,Teams of a player,GET
+61,Teams,Search teams,GET
+62,Teams,Get members of a team,GET
+63,Teams,Get team Arena tournaments,GET
+64,Teams,Join a team,POST
+65,Teams,Leave a team,POST
+66,Teams,Get join requests,GET
+67,Teams,Accept join request,POST
+68,Teams,Decline join request,POST
+69,Teams,Kick a user from your team,POST
+70,Teams,Message all members,POST
+71,Board,Stream incoming events,GET
+72,Board,Create a seek,POST
+73,Board,Stream Board game state,GET
+74,Board,Make a Board move,POST
+75,Board,Write in the chat,POST
+76,Board,Fetch the game chat,GET
+77,Board,Abort a game,POST
+78,Board,Resign a game,POST
+79,Board,Handle draw offers,POST
+80,Board,Handle takeback offers,POST
+81,Board,Claim victory of a game,POST
+82,Board,Claim draw of a game,POST
+83,Board,Berserk a tournament game,POST
+84,Bot,Stream incoming events,GET
+85,Bot,Get online bots,GET
+86,Bot,Upgrade to Bot account,POST
+87,Bot,Stream Bot game state,GET
+88,Bot,Make a Bot move,POST
+89,Bot,Write in the chat,POST
+90,Bot,Fetch the game chat,GET
+91,Bot,Abort a game,POST
+92,Bot,Resign a game,POST
+93,Bot,Handle draw offers,POST
+94,Bot,Handle takeback offers,POST
+95,Bot,Claim victory of a game,POST
+96,Bot,Claim draw of a game,POST
+97,Challenges,List your challenges,GET
+98,Challenges,Create a challenge,POST
+99,Challenges,Show one challenge,GET
+100,Challenges,Accept a challenge,POST
+101,Challenges,Decline a challenge,POST
+102,Challenges,Cancel a challenge,POST
+103,Challenges,Challenge the AI,POST
+104,Challenges,Open-ended challenge,POST
+105,Challenges,Start clocks of a game,POST
+106,Challenges,Add time to the opponent clock,POST
+107,Challenges,Admin challenge tokens,POST
+108,Bulk pairings,View your bulk pairings,GET
+109,Bulk pairings,Create a bulk pairing,POST
+110,Bulk pairings,Manually start clocks,POST
+111,Bulk pairings,Show a bulk pairing,GET
+112,Bulk pairings,Cancel a bulk pairing,DEL
+113,Bulk pairings,Export games of a bulk pairing,GET
+114,Arena tournaments,Get current tournaments,GET
+115,Arena tournaments,Create a new Arena tournament,POST
+116,Arena tournaments,Get info about an Arena tournament,GET
+117,Arena tournaments,Update an Arena tournament,POST
+118,Arena tournaments,Join an Arena tournament,POST
+119,Arena tournaments,Pause or leave an Arena tournament,POST
+120,Arena tournaments,Terminate an Arena tournament,POST
+121,Arena tournaments,Update a team battle,POST
+122,Arena tournaments,Export games of an Arena tournament,GET
+123,Arena tournaments,Get results of an Arena tournament,GET
+124,Arena tournaments,Get team standing of a team battle,GET
+125,Arena tournaments,Get tournaments created by a user,GET
+126,Arena tournaments,Get tournaments played by a user,GET
+127,Arena tournaments,Get team Arena tournaments,GET
+128,Swiss tournaments,Create a new Swiss tournament,POST
+129,Swiss tournaments,Get info about a Swiss tournament,GET
+130,Swiss tournaments,Update a Swiss tournament,POST
+131,Swiss tournaments,Manually schedule the next round,POST
+132,Swiss tournaments,Join a Swiss tournament,POST
+133,Swiss tournaments,Pause or leave a swiss tournament,POST
+134,Swiss tournaments,Terminate a Swiss tournament,POST
+135,Swiss tournaments,Export TRF of a Swiss tournament,GET
+136,Swiss tournaments,Export games of a Swiss tournament,GET
+137,Swiss tournaments,Get results of a swiss tournament,GET
+138,Swiss tournaments,Get team swiss tournaments,GET
+139,Simuls,Get current simuls,GET
+140,Studies,Export one study chapter,GET
+141,Studies,Export all chapters,GET
+142,Studies,Study metadata,HEAD
+143,Studies,Import PGN into a study,POST
+144,Studies,Update PGN tags of a study chapter,POST
+145,Studies,Export all studies of a user,GET
+146,Studies,List studies of a user,GET
+147,Studies,Delete a study chapter,DEL
+148,Messaging,Send a private message,POST
+149,Broadcasts,Get official broadcasts,GET
+150,Broadcasts,Get paginated top broadcast previews,GET
+151,Broadcasts,Get broadcasts created by a user,GET
+152,Broadcasts,Search broadcasts,GET
+153,Broadcasts,Create a broadcast tournament,POST
+154,Broadcasts,Get a broadcast tournament,GET
+155,Broadcasts,Get players of a broadcast,GET
+156,Broadcasts,Get a player of a broadcast,GET
+157,Broadcasts,Update your broadcast tournament,POST
+158,Broadcasts,Create a broadcast round,POST
+159,Broadcasts,Get a broadcast round,GET
+160,Broadcasts,Update a broadcast round,POST
+161,Broadcasts,Reset a broadcast round,POST
+162,Broadcasts,Push PGN to a broadcast round,POST
+163,Broadcasts,Stream an ongoing broadcast round as PGN,GET
+164,Broadcasts,Export one round as PGN,GET
+165,Broadcasts,Export all rounds as PGN,GET
+166,Broadcasts,Get your broadcast rounds,GET
+167,FIDE,Get a FIDE player,GET
+168,FIDE,Search FIDE players,GET
+169,Analysis,Get cloud evaluation of a position.,GET
+170,External engine,List external engines,GET
+171,External engine,Create external engine,POST
+172,External engine,Get external engine,GET
+173,External engine,Update external engine,PUT
+174,External engine,Delete external engine,DEL
+175,External engine,Analyse with external engine,POST
+176,External engine,Acquire analysis request,POST
+177,External engine,Answer analysis request,POST
+178,Opening Explorer,Masters database,GET
+179,Opening Explorer,Lichess games,GET
+180,Opening Explorer,Player games,GET
+181,Opening Explorer,OTB master game,GET
+182,Tablebase,Tablebase lookup,GET
+183,Tablebase,Tablebase lookup for Atomic chess,GET
+184,Tablebase,Tablebase lookup for Antichess,GET
+185,OAuth,Request authorization code,GET
+186,OAuth,Obtain access token,POST
+187,OAuth,Revoke access token,DEL
+188,OAuth,Test multiple OAuth tokens,POST

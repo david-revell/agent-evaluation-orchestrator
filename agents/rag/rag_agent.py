@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Iterable, List, Sequence
 
 from openai import OpenAI
+from dotenv import load_dotenv
 
 PDF_ERROR_MESSAGE = "I can't answer because the document is missing or unreadable."
 MODEL_NAME = "gpt-5-nano"
@@ -24,6 +25,8 @@ USE_LLM = os.getenv("RAG_USE_LLM", "1") != "0"
 DEBUG = os.getenv("RAG_DEBUG", "0") == "1"
 TOP_K = 3
 MAX_CHARS_PER_CHUNK = 900
+
+load_dotenv()
 
 # Match the calendar agent: rely on OPENAI_API_KEY in the environment.
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")

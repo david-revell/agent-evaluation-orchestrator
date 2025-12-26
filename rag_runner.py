@@ -14,6 +14,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
 
+from dotenv import load_dotenv
+
 ROOT_DIR = Path(__file__).resolve().parent
 RAG_DIR = ROOT_DIR / "agents" / "rag"
 SCENARIOS_CSV = RAG_DIR / "rag_scenarios.csv"
@@ -21,6 +23,9 @@ DEFAULT_MAX_TURNS = 1
 
 # Allow the RAG module to be imported without colliding with the installed `agents` package.
 sys.path.insert(0, str(RAG_DIR))
+
+load_dotenv()
+
 import rag_agent  # type: ignore  # noqa: E402
 
 USE_HUMAN_INPUT = (os.getenv("RAG_HUMAN_USER") or os.getenv("HUMAN_USER") or "0") == "1"

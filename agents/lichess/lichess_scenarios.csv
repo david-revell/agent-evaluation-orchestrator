@@ -1,0 +1,6 @@
+scenario,initial_user_message
+profile_check,Show my Lichess profile details.
+recent_games,Show the most recent game for username peletis.
+filtered_games,List games for peletis with ratings at least 1800 and openings starting with C20.
+daily_puzzle,Get today\'s daily puzzle and include its solution.
+tv_channel,Which game is on the classical Lichess TV channel right now?

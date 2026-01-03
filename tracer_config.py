@@ -19,7 +19,7 @@ ENV = os.getenv("ENV", "dev")
 PHOENIX_API_KEY = os.getenv("PHOENIX_API_KEY")
 DISABLE_TRACING = os.getenv("DISABLE_TRACING", "").lower() in {"1", "true", "yes", "on"}
 PHOENIX_HOSTNAME = os.getenv("PHOENIX_HOSTNAME", "https://app.phoenix.arize.com/s/Palete_production")
-
+ 
 # CRITICAL: Set OTEL headers in environment BEFORE importing phoenix.otel.register
 # The register() function reads this environment variable internally
 if PHOENIX_API_KEY and not os.getenv("OTEL_EXPORTER_OTLP_HEADERS"):
